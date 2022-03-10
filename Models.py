@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-from dataclasses_json import dataclass_json
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.declarative import declarative_base

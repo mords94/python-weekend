@@ -9,6 +9,6 @@ class Database:
     def __init__(self):
         self.engine = create_engine(
             DATABASE_URL,
-            echo=True,
+            echo=False,
             poolclass=NullPool
         )

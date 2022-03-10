@@ -1,12 +1,11 @@
 import json
-from typing import Any, List
+from typing import Any
 import requests
 from JourneyRepository import JourneyRepository
-from Models import Journey
 from Options import Options
 from Redis import RedisClient
-from Route import Route, RouteFactory
-from Routes import Routes, RoutesFactory
+from Route import RouteFactory
+from Routes import Routes
 from slugify import slugify
 
 from config import LOCATIONS_URL, RATES_URL, ROUTE_URL
@@ -20,7 +19,7 @@ class Scraper:
     redis: RedisClient
     journeyRepository: JourneyRepository
 
-    def __init__(self, journeyRepository, redis, options: Options):
+    def __init__(self, journeyRepository: JourneyRepository, redis: RedisClient, options: Options):
         self.options = options
         self.redis = redis
         self.journeyRepository = journeyRepository
@@ -44,9 +43,6 @@ class Scraper:
     def get_rates_key(self):
         return 'dravai:rates'
 
-    def get_journey_key(self):
-        return 'dravai:journey:'+"_".join([slugify(self.options.source), slugify(self.options.destination), slugify(self.options.departure_date)])
-
     def get_location_key(self, location):
         return 'dravai:location:' + slugify(location)
 
@@ -68,45 +64,22 @@ class Scraper:
                     self.toLocationId = city['id']
 
     def find_routes(self):
-        routes = self.redis.get(self.get_journey_key())
+        try:
+            params = {"tariffs": "REGULAR", "toLocationType": "CITY", 'toLocationId': self.toLocationId,
+                      'fromLocationType': 'CITY', "fromLocationId": self.fromLocationId, "departureDate": self.options.departure_date}
 
-        if(routes is not None):
-            print("From redis")
-            routes = Routes(Route.schema().loads(
-                json.loads(routes), many=True))
+            routes_result = requests.get(ROUTE_URL, params, headers={
+                'X-Currency': 'EUR'}).json()['routes']
 
-            self.persist(routes)
-            return routes
+            routes_list = list(map(lambda r: RouteFactory.create(
+                r, self.options, self.rates), routes_result))
 
-        # journeys: List[Journey] = self.journeyRepository.find_all_by_options(
-        #     self.options)
+            return Routes(routes_list)
 
-        # if(journeys is not None):
-        #     print("FROM DATABASE....")
-        #     return RoutesFactory.from_journeys(journeys)
+        except:
+            return Routes([])
 
-        params = {"tariffs": "REGULAR", "toLocationType": "CITY", 'toLocationId': self.toLocationId,
-                  'fromLocationType': 'CITY', "fromLocationId": self.fromLocationId, "departureDate": self.options.departure_date}
-
-        routes_result = requests.get(ROUTE_URL, params, headers={
-            'X-Currency': 'EUR'}).json()['routes']
-
-        routes_list = list(map(lambda r: RouteFactory.create(
-            r, self.options, self.rates), routes_result))
-
-        routes = Routes(routes_list)
-
-        self.redis.set(self.get_journey_key(), str(routes))
-        self.persist(routes)
-        return routes
-
-    def persist(self, routes: Routes):
-        for route in routes.routes:
-            journey = self.journeyRepository.find_by_route(route)
-            if(journey is None):
-                self.journeyRepository.create(route)
-
-    def get_routes(self):
+    def scrape(self):
         self.fetch_locations()
         self.fetch_rates()
 

@@ -1,4 +1,5 @@
-from pyparsing import Opt
+from datetime import datetime, timedelta
+from sqlalchemy import cast, Date
 from sqlalchemy.orm.session import Session
 from Database import Database
 from Models import Journey
@@ -38,21 +39,27 @@ class JourneyRepository:
                 Journey.arrival_datetime == journey.arrival_datetime and
                 Journey.departure_datetime == journey.departure_datetime and
                 Journey.source == journey.source and
-                Journey.destination == journey.destination
+                Journey.destination == journey.destination and
+                Journey.currency == journey.fare.currency and
+                Journey.price == journey.fare.amount
             ).first()
 
     def find_by_options(self, options: Options):
         with Session(self.database.engine) as session:
             return session.query(Journey).filter(
-                Journey.source == options.source and
-                Journey.destination == options.destination
+                Journey.source == options.source,
+                Journey.destination == options.destination,
+                cast(Journey.departure_datetime, Date) == options.departure()
             ).first()
 
     def find_all_by_options(self, options: Options):
+        after_day = options.departure() + timedelta(days=1)
+
         with Session(self.database.engine) as session:
             return session.query(Journey).filter(
-                Journey.source == options.source and
-                Journey.destination == options.destination
+                Journey.source == options.source,
+                Journey.destination == options.destination,
+                cast(Journey.departure_datetime, Date) == options.departure()
             ).all()
 
     def find_all_combinations(self, options: Options):

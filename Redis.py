@@ -1,6 +1,5 @@
 import json
 import redis
-from slugify import slugify
 
 
 class RedisClient:
@@ -12,7 +11,6 @@ class RedisClient:
 
     def get(self, key):
         try:
-            value = self.r.get(key).decode('utf-8')
-            return value
+            return self.r.get(key).decode('utf-8')
         except:
             return None

@@ -1,0 +1,44 @@
+.App, body, htmls {
+  width: 100vw;
+  height: 100vh;
+  background-color: rgb(75, 166, 146);
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: auto;
+}
+
+.item {
+  flex:1;
+  margin-top:20px;
+  max-height: 200px;
+  background-color: white;
+  box-shadow: rgba(37, 42, 49, 0.3) 0px 4px 12px 0px;
+  padding: 2em;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.item:first-child {
+  margin-top: 40px
+}
+
+.wrapper {
+  flex:1;
+  max-height: 200px;
+  background-color: white;
+  box-shadow: rgba(37, 42, 49, 0.3) 0px 4px 12px 0px;
+
+  padding: 2em;
+}
+
+
+.wrapper form {
+  margin-top: 40px;
+}

@@ -1,9 +1,8 @@
 import argparse
-from dataclasses import dataclass
 from typing import Optional
+from pendulum import datetime
 from pydantic import BaseModel
-
-from dataclasses_json import dataclass_json
+from datetime import datetime
 
 
 class OptionParser:
@@ -33,3 +32,6 @@ class Options(BaseModel):
     destination: str
     departure_date: str
     currency: Optional[str] = 'EUR'
+
+    def departure(self):
+        return datetime.fromisoformat(self.departure_date)
